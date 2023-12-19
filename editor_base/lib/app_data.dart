@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_cupertino_desktop_kit/cdk.dart';
 import 'app_data_actions.dart';
 import 'util_shape.dart';
 
@@ -14,6 +15,9 @@ class AppData with ChangeNotifier {
   String toolSelected = "shape_drawing";
   Shape newShape = Shape();
   List<Shape> shapesList = [];
+
+  Color currentShapeColor = CDKTheme.black;
+  Color currentBackgroundColor = Color.fromRGBO(0, 0, 0, 0.0);
 
   bool readyExample = false;
   late dynamic dataExample;
@@ -92,5 +96,19 @@ class AppData with ChangeNotifier {
   void setNewShapeStrokeWidth(double value) {
     newShape.setStrokeWidth(value);
     notifyListeners();
+  }
+
+  void setNewShapeColor(Color color) {
+    newShape.setStrokeColor(color);
+    currentShapeColor = color;
+    notifyListeners();
+  }
+
+  void setNewBackgroundColor(Color oldColor, Color newColor, bool toRegister) {
+    currentBackgroundColor = newColor;
+    if (toRegister) {
+      actionManager.register(ActionAddNewBackground(this, oldColor, newColor));
+    }
+    forceNotifyListeners();
   }
 }

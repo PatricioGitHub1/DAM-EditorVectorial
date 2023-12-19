@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_cupertino_desktop_kit/cdk.dart';
 import 'app_data.dart';
 import 'util_shape.dart';
@@ -149,7 +150,7 @@ class LayoutDesignPainter extends CustomPainter {
   static void paintShape(Canvas canvas, Shape shape) {
     if (shape.vertices.isNotEmpty) {
       Paint paint = Paint();
-      paint.color = CDKTheme.black;
+      paint.color = shape.strokeColor;
       paint.style = PaintingStyle.stroke;
       paint.strokeWidth = shape.strokeWidth;
       double x = shape.position.dx + shape.vertices[0].dx;
@@ -163,6 +164,15 @@ class LayoutDesignPainter extends CustomPainter {
       }
       canvas.drawPath(path, paint);
     }
+  }
+
+  static void paintHighlightedShape(Canvas canvas, List<Offset> offsetList, double x, double y) {
+    Paint paint = Paint()..color = CDKTheme.yellow;
+    paint.style = PaintingStyle.stroke;
+    paint.strokeWidth = 3;
+    Offset a = Offset(offsetList[0].dx + x, offsetList[0].dy + y);
+    Offset b = Offset(offsetList[1].dx + x, offsetList[1].dy + y);
+    canvas.drawLine(a,b, paint);
   }
 
   @override
@@ -204,6 +214,8 @@ class LayoutDesignPainter extends CustomPainter {
     }
 
     // Dibuixa el fons del document aquí ...
+    canvas.drawRect(Rect.fromLTWH(0, 0, docW, docH),
+        Paint()..color = appData.currentBackgroundColor);
 
     // Dibuixa la llista de poligons (segons correspon, relatiu a la seva posició)
     if (appData.shapesList.isNotEmpty) {
@@ -215,7 +227,11 @@ class LayoutDesignPainter extends CustomPainter {
 
     // Dibuixa el poligon que s'està afegint (relatiu a la seva posició)
     Shape shape = appData.newShape;
+    // Ens assegurem que el color del new Shape es igual que el seleccionat
+    shape.strokeColor = appData.currentShapeColor;
     paintShape(canvas, shape);
+
+    // Pinta el requadre groc si s'esta tocant un shape
 
     // Restaura l'estat previ a l'escalat i translació
     canvas.restore();

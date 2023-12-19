@@ -1,11 +1,13 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter_cupertino_desktop_kit/cdk.dart';
 
 class Shape {
   Offset position = const Offset(0, 0);
   Size scale = const Size(1, 1);
   double rotation = 0;
   List<Offset> vertices = [];
-  double strokeWidth = 1;
+  double strokeWidth = 10;
+  Color strokeColor = CDKTheme.black;
 
   Shape();
 
@@ -31,5 +33,9 @@ class Shape {
 
   void setStrokeWidth(double width) {
     strokeWidth = width;
+  }
+
+  void setStrokeColor(Color color) {
+    strokeColor = color;
   }
 }

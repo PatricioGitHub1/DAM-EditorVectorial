@@ -11,6 +11,8 @@ class LayoutSidebarFormat extends StatefulWidget {
 }
 
 class LayoutSidebarFormatState extends State<LayoutSidebarFormat> {
+  final GlobalKey anchorKey = GlobalKey();
+
   @override
   Widget build(BuildContext context) {
     AppData appData = Provider.of<AppData>(context);
@@ -40,11 +42,11 @@ class LayoutSidebarFormatState extends State<LayoutSidebarFormat> {
                       width: 80,
                       child: CDKFieldNumeric(
                         value: appData.newShape.strokeWidth,
-                        min: 0.01,
+                        min: 1,
                         max: 100,
                         units: "px",
                         increment: 0.5,
-                        decimals: 2,
+                        decimals: 0,
                         onValueChanged: (value) {
                           appData.setNewShapeStrokeWidth(value);
                         },
@@ -59,6 +61,28 @@ class LayoutSidebarFormatState extends State<LayoutSidebarFormat> {
                         width: labelsWidth,
                         child: Text("Stroke color:", style: font)),
                     const SizedBox(width: 4),
+                    Container(
+                        alignment: Alignment.centerLeft,
+                        width: 80,
+                        child: CDKButtonColor(
+                            onPressed: () {
+                              showCupertinoModalPopup(
+                                context: context,
+                                builder: (BuildContext context) =>
+                                    CupertinoAlertDialog(
+                                        title: const Text('Color Picker'),
+                                        content: CDKPickerColor(
+                                          color: appData.currentShapeColor,
+                                          onChanged: (selectedColor) {
+                                            appData.setNewShapeColor(
+                                                selectedColor);
+                                          },
+                                        )),
+                              ).then((value) {
+                                print("Cerrado");
+                              });
+                            },
+                            color: appData.currentShapeColor)),
                   ],
                 ),
                 const SizedBox(height: 16),

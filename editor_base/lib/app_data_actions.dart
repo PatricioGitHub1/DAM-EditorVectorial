@@ -103,3 +103,26 @@ class ActionAddNewShape implements Action {
     appData.forceNotifyListeners();
   }
 }
+
+class ActionAddNewBackground implements Action {
+  final AppData appData;
+  final Color previousColor;
+  final Color newColor;
+
+  ActionAddNewBackground(this.appData, this.previousColor, this.newColor);
+
+  _action(Color value) {
+    appData.currentBackgroundColor = value;
+    appData.forceNotifyListeners();
+  }
+
+  @override
+  void redo() {
+    _action(newColor);
+  }
+
+  @override
+  void undo() {
+    _action(previousColor);
+  }
+}

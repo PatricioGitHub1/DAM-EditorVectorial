@@ -84,6 +84,28 @@ class LayoutSidebarDocumentState extends State<LayoutSidebarDocument> {
                         width: labelsWidth,
                         child: Text("Background color:", style: font)),
                     const SizedBox(width: 4),
+                    Container(
+                        alignment: Alignment.centerLeft,
+                        width: 80,
+                        child: CDKButtonColor(
+                            onPressed: () {
+                              Color initialColor = appData.currentBackgroundColor;
+                              showCupertinoModalPopup(
+                                context: context,
+                                builder: (BuildContext context) =>
+                                    CupertinoAlertDialog(
+                                        title: const Text('Color Picker'),
+                                        content: CDKPickerColor(
+                                          color: appData.currentBackgroundColor,
+                                          onChanged: (selectedColor) {
+                                            appData.setNewBackgroundColor(initialColor, selectedColor, false);
+                                          },
+                                        )),
+                              ).then((value) {
+                                appData.setNewBackgroundColor(initialColor, appData.currentBackgroundColor, true);
+                              });
+                            },
+                            color: appData.currentBackgroundColor)),
                   ],
                 ),
                 const SizedBox(height: 16),
