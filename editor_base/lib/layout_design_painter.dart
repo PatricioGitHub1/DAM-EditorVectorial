@@ -153,26 +153,77 @@ class LayoutDesignPainter extends CustomPainter {
       paint.color = shape.strokeColor;
       paint.style = PaintingStyle.stroke;
       paint.strokeWidth = shape.strokeWidth;
-      double x = shape.position.dx + shape.vertices[0].dx;
-      double y = shape.position.dy + shape.vertices[0].dy;
       Path path = Path();
-      path.moveTo(x, y);
-      for (int i = 1; i < shape.vertices.length; i++) {
-        x = shape.position.dx + shape.vertices[i].dx;
-        y = shape.position.dy + shape.vertices[i].dy;
-        path.lineTo(x, y);
+
+      if (shape is ShapeRectangle && shape.vertices.length == 2) {
+        double x = shape.position.dx + shape.vertices[0].dx;
+        double y = shape.position.dy + shape.vertices[0].dy;
+        path.moveTo(x, y);
+        path.addRect(Rect.fromLTRB(shape.position.dx + shape.vertices[0].dx, shape.position.dy + shape.vertices[0].dy, shape.position.dx + shape.vertices[1].dx, shape.position.dy + shape.vertices[1].dy));
+
+      } else if (shape is ShapeEllipsis && shape.vertices.length == 2) {
+        double x = shape.position.dx + shape.vertices[0].dx;
+        double y = shape.position.dy + shape.vertices[0].dy;
+        path.moveTo(x, y);
+        path.addOval(Rect.fromLTRB(shape.position.dx + shape.vertices[0].dx, shape.position.dy + shape.vertices[0].dy, shape.position.dx + shape.vertices[1].dx, shape.position.dy + shape.vertices[1].dy));
+
+      } else {
+        double x = shape.position.dx + shape.vertices[0].dx;
+        double y = shape.position.dy + shape.vertices[0].dy;
+        
+        path.moveTo(x, y);
+        for (int i = 1; i < shape.vertices.length; i++) {
+          x = shape.position.dx + shape.vertices[i].dx;
+          y = shape.position.dy + shape.vertices[i].dy;
+          path.lineTo(x, y);
+        }
+      }
+
+      // fill
+      Color tempfill = shape.fillColor;
+      if (tempfill.alpha != 0) {
+        Paint paintFill = Paint()
+        ..style = PaintingStyle.fill
+        ..color =  shape.fillColor
+        ..strokeWidth = 1.0;
+
+        canvas.drawPath(path, paintFill);
+        
+      }
+
+      if (shape.closed) {
+        path.close();
       }
       canvas.drawPath(path, paint);
+
     }
+    
   }
 
-  static void paintHighlightedShape(Canvas canvas, List<Offset> offsetList, double x, double y) {
+  static void paintHighlightedShape(Canvas canvas, Map<Shape, List<Offset>> offsetmap) {
     Paint paint = Paint()..color = CDKTheme.yellow;
     paint.style = PaintingStyle.stroke;
     paint.strokeWidth = 3;
-    Offset a = Offset(offsetList[0].dx + x, offsetList[0].dy + y);
-    Offset b = Offset(offsetList[1].dx + x, offsetList[1].dy + y);
-    canvas.drawLine(a,b, paint);
+
+    for (Shape sp in offsetmap.keys) {
+      if (sp.isSelected) {
+        List<Offset> offsetList = offsetmap[sp]!;
+        Offset a = Offset(offsetList[0].dx, offsetList[0].dy);
+        Offset b = Offset(offsetList[1].dx, offsetList[1].dy);
+        // Horizontal 1
+        canvas.drawLine(a, Offset(b.dx, a.dy), paint);
+        // Vertical 1
+        canvas.drawLine(Offset(b.dx, a.dy), b, paint);
+        // Horizontal 2
+        canvas.drawLine(b, Offset(a.dx, b.dy), paint);
+        // Vertical 2
+        canvas.drawLine(Offset(a.dx, b.dy), a, paint);
+
+        //canvas.drawLine(a,b, paint);
+      }
+      
+    }
+    
   }
 
   @override
@@ -232,7 +283,9 @@ class LayoutDesignPainter extends CustomPainter {
     paintShape(canvas, shape);
 
     // Pinta el requadre groc si s'esta tocant un shape
-
+    if (appData.highlightPoints.isNotEmpty) {
+      paintHighlightedShape(canvas, appData.highlightPoints);
+    }
     // Restaura l'estat previ a l'escalat i translació
     canvas.restore();
 

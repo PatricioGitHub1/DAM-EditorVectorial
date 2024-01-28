@@ -29,6 +29,10 @@ void main() async {
           (Platform.isWindows && event.isControlPressed);
       bool isShiftPressed = event.isShiftPressed;
       bool isZPressed = event.logicalKey == LogicalKeyboardKey.keyZ;
+      bool isCPressed = event.logicalKey == LogicalKeyboardKey.keyC;
+      bool isVPressed = event.logicalKey == LogicalKeyboardKey.keyV;
+      bool isDeletePressed = event.logicalKey == LogicalKeyboardKey.delete;
+      bool isBackspacePressed = event.logicalKey == LogicalKeyboardKey.backspace;
 
       if (event is RawKeyDownEvent) {
         if (isControlPressed && isZPressed && !isShiftPressed) {
@@ -40,6 +44,17 @@ void main() async {
         }
         if (event.logicalKey == LogicalKeyboardKey.altLeft) {
           appData.isAltOptionKeyPressed = true;
+        }
+        if (isControlPressed && isCPressed) {
+          appData.copyShapeToClipboard();
+          return KeyEventResult.handled;
+        }
+        if (isControlPressed && isVPressed) {
+          appData.pasteShapeFromClipboard("text/plain");
+          return KeyEventResult.handled;
+        }
+        if ((isDeletePressed && isControlPressed) || (isBackspacePressed && isControlPressed)) {
+          appData.deleteShape();
         }
       } else if (event is RawKeyUpEvent) {
         if (event.logicalKey == LogicalKeyboardKey.altLeft) {

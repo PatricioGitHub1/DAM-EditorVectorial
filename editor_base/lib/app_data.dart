@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_cupertino_desktop_kit/cdk.dart';
 import 'app_data_actions.dart';
 import 'util_shape.dart';
@@ -13,14 +16,19 @@ class AppData with ChangeNotifier {
   double zoom = 95;
   Size docSize = const Size(500, 400);
   String toolSelected = "shape_drawing";
-  Shape newShape = Shape();
+  Shape newShape = ShapeDrawing();
   List<Shape> shapesList = [];
 
   Color currentShapeColor = CDKTheme.black;
   Color currentBackgroundColor = Color.fromRGBO(0, 0, 0, 0.0);
+  Color currentFillColor = Color.fromRGBO(0, 0, 0, 0.0);
+
+  Map<Shape,List<Offset>> highlightPoints = {};
 
   bool readyExample = false;
   late dynamic dataExample;
+
+  int shapeSelected = -1;
 
   void forceNotifyListeners() {
     super.notifyListeners();
@@ -83,12 +91,17 @@ class AppData with ChangeNotifier {
     notifyListeners();
   }
 
+  void setOffsetByPostion(Offset offset, int index) { 
+    newShape.setOffsetByPostion(offset, index);
+    notifyListeners();
+  }
+
   void addNewShapeToShapesList() {
     // Si no hi ha almenys 2 punts, no es podrà dibuixar res
     if (newShape.vertices.length >= 2) {
       double strokeWidthConfig = newShape.strokeWidth;
       actionManager.register(ActionAddNewShape(this, newShape));
-      newShape = Shape();
+      newShape = ShapeDrawing();
       newShape.setStrokeWidth(strokeWidthConfig);
     }
   }
@@ -104,6 +117,17 @@ class AppData with ChangeNotifier {
     notifyListeners();
   }
 
+  void setNewShapeFillcolor (Color color) {
+    newShape.fillColor = color;
+    currentFillColor = color;
+    notifyListeners();
+  }
+
+  void setIsShapeClosed() {
+    newShape.closed = !newShape.closed;
+    notifyListeners();
+  }
+
   void setNewBackgroundColor(Color oldColor, Color newColor, bool toRegister) {
     currentBackgroundColor = newColor;
     if (toRegister) {
@@ -111,4 +135,95 @@ class AppData with ChangeNotifier {
     }
     forceNotifyListeners();
   }
+
+  void getHighlightOffsets(Shape shape) {
+    highlightPoints[shape] = getOuterOffsetList(shape);
+  }
+
+  List<Offset> getOuterOffsetList(Shape shape) {
+    // Primer punto
+      Offset minDxOffset = shape.vertices.reduce((currentMin, offset) =>
+        offset.dx < currentMin.dx ? offset : currentMin);
+      Offset minDyOffset = shape.vertices.reduce((currentMin, offset) =>
+        offset.dy < currentMin.dy ? offset : currentMin);
+      // Segundo punto
+      Offset maxDxOffset = shape.vertices.reduce((currentMax, offset) =>
+        offset.dx > currentMax.dx ? offset : currentMax);
+      Offset maxDyOffset = shape.vertices.reduce((currentMax, offset) =>
+        offset.dy > currentMax.dy ? offset : currentMax);
+
+      // Ajustamos añadiendo la posicion del shape + su stroke
+      List<Offset> lista = [];
+      lista.add(Offset(minDxOffset.dx + shape.position.dx - shape.strokeWidth/2, minDyOffset.dy + shape.position.dy - shape.strokeWidth/2));
+      lista.add(Offset(maxDxOffset.dx + shape.position.dx + shape.strokeWidth/2, maxDyOffset.dy + shape.position.dy + shape.strokeWidth/2));
+
+      return lista;
+  }
+
+  Shape getSelectedShape() {
+    for (var i = 0; i < shapesList.length; i++) {
+      if (shapesList[i].isSelected) {
+        return shapesList[i];
+      }
+    }
+
+    return ShapeDrawing();
+  }
+
+  void updateShapePosition(Offset newShapePosition) {
+    Shape shape = getSelectedShape();
+    shape.setPosition(newShapePosition);
+    getHighlightOffsets(shape);
+    notifyListeners();
+  }
+
+  void setShapePosition(Offset startingPosition, Offset endingPosition) {
+    actionManager.register(ActionMoveSelectedShape(this, getSelectedShape(), startingPosition, endingPosition));
+  }
+
+  void setStrokeRegister(Shape shape, double starting, double ending) {
+    actionManager.register(ActionFormatStrokeWidth(this, shape, starting, ending));
+  } 
+
+  void setStrokeColorRegister(Shape shape, Color previousColor, Color newColor) {
+    actionManager.register(ActionFormatStrokeColor(this, shape, previousColor, newColor));
+  }
+
+  void deleteShape() {
+    if (shapeSelected != -1) {
+      Shape shapeToDelete = getSelectedShape();
+      shapesList.remove(shapeToDelete);
+      actionManager.register(ActionRemoveShape(this, shapeToDelete));
+      notifyListeners();
+    }
+  }
+
+  void copyShapeToClipboard() {
+    if (shapeSelected != -1) {
+      Clipboard.setData(ClipboardData(text: getSelectedShape().toMap().toString()));
+    }
+  }
+
+  //  
+  void pasteShapeFromClipboard(String format) async {
+    ClipboardData? data = await Clipboard.getData("text/plain");
+        
+    if (data != null && data.text != null) {
+      try {
+        Map<String, dynamic> jsonData = jsonDecode(data.text!);
+        if (jsonData["type"] == "shape_drawing") {
+          Shape clipboardShape = Shape.fromMap(jsonData);
+          actionManager.register(ActionAddNewShape(this, clipboardShape));
+          notifyListeners();
+        }
+        
+      } catch (e) {
+        print("Error decoding JSON: $e");
+      }
+    } else {
+      print("Clipboard data or text is null");
+    }
+    
+  }
 }
+

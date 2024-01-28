@@ -1,3 +1,5 @@
+
+import 'package:editor_base/util_shape.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_cupertino_desktop_kit/cdk.dart';
 import 'package:provider/provider.dart';
@@ -20,6 +22,16 @@ class LayoutSidebarFormatState extends State<LayoutSidebarFormat> {
     TextStyle fontBold =
         const TextStyle(fontSize: 12, fontWeight: FontWeight.bold);
     TextStyle font = const TextStyle(fontSize: 12, fontWeight: FontWeight.w400);
+
+    // Change editor values to match selected Shape
+    Color shapeInitialColor = CDKTheme.black;
+    
+    if (appData.shapeSelected != -1) {
+      Shape selShape = appData.getSelectedShape();
+      shapeInitialColor = selShape.strokeColor;
+      appData.newShape.strokeWidth = selShape.strokeWidth;
+      appData.currentShapeColor = selShape.strokeColor;
+    }
 
     return Container(
       padding: const EdgeInsets.all(4.0),
@@ -49,6 +61,11 @@ class LayoutSidebarFormatState extends State<LayoutSidebarFormat> {
                         decimals: 0,
                         onValueChanged: (value) {
                           appData.setNewShapeStrokeWidth(value);
+                          if (appData.shapeSelected != -1) {
+                            Shape selShape = appData.getSelectedShape();
+                            appData.setStrokeRegister(selShape, selShape.strokeWidth, value);
+                            selShape.strokeWidth = value;
+                          }
                         },
                       )),
                 ]),
@@ -76,16 +93,87 @@ class LayoutSidebarFormatState extends State<LayoutSidebarFormat> {
                                           onChanged: (selectedColor) {
                                             appData.setNewShapeColor(
                                                 selectedColor);
+
+                                            if (appData.shapeSelected != -1) {
+                                              Shape selShape = appData.getSelectedShape();
+                                              selShape.strokeColor = selectedColor;
+                                            }
                                           },
                                         )),
                               ).then((value) {
-                                print("Cerrado");
+                                if (appData.shapeSelected != -1) {
+                                  Shape s = appData.getSelectedShape();
+                                  appData.setStrokeColorRegister(s, shapeInitialColor, s.strokeColor);
+                                }
                               });
                             },
                             color: appData.currentShapeColor)),
                   ],
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    Container(
+                        alignment: Alignment.centerRight,
+                        width: labelsWidth,
+                        child: Text("Close Shape:", style: font)),
+                    const SizedBox(width: 4),
+                    Container(
+                        alignment: Alignment.centerLeft,
+                        width: 80,
+                        child: CDKButtonCheckBox(value: appData.newShape.closed, onChanged: (value) {
+                          appData.setIsShapeClosed();
+                          if (appData.shapeSelected != -1) {
+                            Shape selShape = appData.getSelectedShape();
+                            selShape.closed = value;
+                          }
+                          
+                        },)
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    Container(
+                        alignment: Alignment.centerRight,
+                        width: labelsWidth,
+                        child: Text("Fill color:", style: font)),
+                    const SizedBox(width: 4),
+                    Container(
+                        alignment: Alignment.centerLeft,
+                        width: 80,
+                        child: CDKButtonColor(
+                            onPressed: () {
+                              showCupertinoModalPopup(
+                                context: context,
+                                builder: (BuildContext context) =>
+                                    CupertinoAlertDialog(
+                                        title: const Text('Color Picker'),
+                                        content: CDKPickerColor(
+                                          color: appData.newShape.fillColor,
+                                          onChanged: (selectedColor) {
+                                            appData.setNewShapeFillcolor(selectedColor);
+
+                                            if (appData.shapeSelected != -1) {
+                                              Shape selShape = appData.getSelectedShape();
+                                              selShape.fillColor = selectedColor;
+                                            }
+                                          },
+                                        )),
+                              ).then((value) {
+                                if (appData.shapeSelected != -1) {
+                                  Shape s = appData.getSelectedShape();
+                                  //appData.setStrokeColorRegister(s, shapeInitialColor, s.strokeColor);
+                                }
+                              });
+                            },
+                            color: appData.currentFillColor)),
+                  ],
+                ),
+                const SizedBox(height: 8),
               ]);
         },
       ),

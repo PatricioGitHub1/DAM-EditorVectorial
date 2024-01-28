@@ -93,6 +93,11 @@ class ActionAddNewShape implements Action {
 
   @override
   void undo() {
+    if (newShape.isSelected) {
+      appData.shapeSelected = -1;
+      newShape.isSelected = false;
+      appData.highlightPoints.remove(newShape);
+    }
     appData.shapesList.remove(newShape);
     appData.forceNotifyListeners();
   }
@@ -100,6 +105,30 @@ class ActionAddNewShape implements Action {
   @override
   void redo() {
     appData.shapesList.add(newShape);
+    appData.forceNotifyListeners();
+  }
+}
+
+class ActionRemoveShape implements Action {
+  final AppData appData;
+  final Shape shape;
+
+  ActionRemoveShape(this.appData, this.shape);
+
+  @override
+  void undo() {
+    appData.shapesList.add(shape);
+    appData.forceNotifyListeners();
+  }
+
+  @override
+  void redo() {
+    if (shape.isSelected) {
+      appData.shapeSelected = -1;
+      shape.isSelected = false;
+      appData.highlightPoints.remove(shape);
+    }
+    appData.shapesList.remove(shape);
     appData.forceNotifyListeners();
   }
 }
@@ -125,4 +154,82 @@ class ActionAddNewBackground implements Action {
   void undo() {
     _action(previousColor);
   }
+}
+
+class ActionMoveSelectedShape implements Action {
+  final AppData appData;
+  final Shape movedShape;
+  final Offset startingPosition;
+  final Offset endingPosition;
+
+  ActionMoveSelectedShape(this.appData, this.movedShape, this.startingPosition, this.endingPosition);
+
+  _action(Offset value) {
+    movedShape.setPosition(value);
+    appData.getHighlightOffsets(movedShape);
+    appData.forceNotifyListeners();
+  }
+
+  @override
+  void redo() {
+    _action(endingPosition);
+  }
+
+  @override
+  void undo() {
+    _action(startingPosition);
+  }
+
+}
+
+class ActionFormatStrokeWidth implements Action {
+  final AppData appData;
+  final Shape shape;
+  final double previousWidth;
+  final double newWidth;
+
+  ActionFormatStrokeWidth(this.appData, this.shape, this.previousWidth, this.newWidth);
+
+  _action(double value) {
+    shape.setStrokeWidth(value);
+    appData.setNewShapeStrokeWidth(value);
+    appData.forceNotifyListeners();
+  }
+
+  @override
+  void redo() {
+    _action(newWidth);
+  }
+
+  @override
+  void undo() {
+    _action(previousWidth);
+  }
+
+}
+
+class ActionFormatStrokeColor implements Action {
+  final AppData appData;
+  final Shape shape;
+  final Color previousColor;
+  final Color newColor;
+
+  ActionFormatStrokeColor(this.appData, this.shape, this.previousColor, this.newColor);
+
+  _action(Color value) {
+    shape.setStrokeColor(value);
+    appData.setNewShapeColor(value);
+    appData.forceNotifyListeners();
+  }
+
+  @override
+  void redo() {
+    _action(newColor);
+  }
+
+  @override
+  void undo() {
+    _action(previousColor);
+  }
+
 }
