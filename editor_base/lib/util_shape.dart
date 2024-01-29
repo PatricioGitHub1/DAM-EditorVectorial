@@ -42,6 +42,10 @@ abstract class Shape {
     strokeColor = color;
   }
 
+  void setNewShapeFillcolor(Color color) {
+    fillColor = color;
+  }
+
   void setOffsetByPostion(Offset offset, int index);
 
   // Converteix la forma en un mapa per serialitzar
@@ -100,9 +104,13 @@ class ShapeLine extends Shape {
   
 }
 
-/*class ShapeMultiline extends Shape {
+class ShapeMultiline extends Shape {
+  @override
+  void setOffsetByPostion(Offset offset, int index) {
+    
+  }
   
-}*/
+}
 
 class ShapeRectangle extends Shape {
   @override

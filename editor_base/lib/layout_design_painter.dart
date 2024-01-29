@@ -188,9 +188,8 @@ class LayoutDesignPainter extends CustomPainter {
         ..strokeWidth = 1.0;
 
         canvas.drawPath(path, paintFill);
-        
       }
-
+      
       if (shape.closed) {
         path.close();
       }
@@ -280,6 +279,8 @@ class LayoutDesignPainter extends CustomPainter {
     Shape shape = appData.newShape;
     // Ens assegurem que el color del new Shape es igual que el seleccionat
     shape.strokeColor = appData.currentShapeColor;
+    shape.fillColor = appData.currentFillColor;
+    shape.closed = appData.currentShapeClosed;
     paintShape(canvas, shape);
 
     // Pinta el requadre groc si s'esta tocant un shape

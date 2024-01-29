@@ -233,3 +233,54 @@ class ActionFormatStrokeColor implements Action {
   }
 
 }
+
+class ActionCloseShape implements Action {
+  final AppData appData;
+  final Shape shape;
+  final bool wasClosed;
+  final bool isClosed;
+
+  ActionCloseShape(this.appData, this.shape, this.wasClosed, this.isClosed);
+
+  _action(bool value) {
+    shape.closed = value;
+    appData.setIsShapeClosed(value);
+    appData.forceNotifyListeners();
+  }
+
+  @override
+  void redo() {
+    _action(isClosed);
+  }
+
+  @override
+  void undo() {
+    _action(wasClosed);
+  }
+
+}
+
+class ActionFormatFillColor implements Action {
+  final AppData appData;
+  final Shape shape;
+  final Color previousColor;
+  final Color newColor;
+
+  ActionFormatFillColor(this.appData, this.shape, this.previousColor, this.newColor);
+
+  _action(Color value) {
+    shape.setNewShapeFillcolor(value);
+    appData.setNewShapeFillcolor(value);
+    appData.forceNotifyListeners();
+  }
+
+  @override
+  void redo() {
+    _action(newColor);
+  }
+
+  @override
+  void undo() {
+    _action(previousColor);
+  }
+}

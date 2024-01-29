@@ -22,6 +22,7 @@ class AppData with ChangeNotifier {
   Color currentShapeColor = CDKTheme.black;
   Color currentBackgroundColor = Color.fromRGBO(0, 0, 0, 0.0);
   Color currentFillColor = Color.fromRGBO(0, 0, 0, 0.0);
+  bool currentShapeClosed = false;
 
   Map<Shape,List<Offset>> highlightPoints = {};
 
@@ -118,13 +119,14 @@ class AppData with ChangeNotifier {
   }
 
   void setNewShapeFillcolor (Color color) {
-    newShape.fillColor = color;
+    newShape.setNewShapeFillcolor(color);
     currentFillColor = color;
     notifyListeners();
   }
 
-  void setIsShapeClosed() {
-    newShape.closed = !newShape.closed;
+  void setIsShapeClosed(bool value) {
+    newShape.closed = value;
+    currentShapeClosed = value;
     notifyListeners();
   }
 
@@ -187,6 +189,14 @@ class AppData with ChangeNotifier {
 
   void setStrokeColorRegister(Shape shape, Color previousColor, Color newColor) {
     actionManager.register(ActionFormatStrokeColor(this, shape, previousColor, newColor));
+  }
+
+  void setCloseRegister(AppData appData, Shape shape, bool wasClosed, bool isClosed) {
+    actionManager.register(ActionCloseShape(appData, shape, wasClosed, isClosed));
+  }
+
+  void setFillColorRegister(AppData appData, Shape shape, Color previousColor, Color newColor) {
+    actionManager.register(ActionFormatFillColor(appData, shape, previousColor, newColor));
   }
 
   void deleteShape() {

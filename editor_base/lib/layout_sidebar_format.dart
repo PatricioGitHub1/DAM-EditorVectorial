@@ -25,12 +25,14 @@ class LayoutSidebarFormatState extends State<LayoutSidebarFormat> {
 
     // Change editor values to match selected Shape
     Color shapeInitialColor = CDKTheme.black;
-    
+    Color shapeInitialFillColor = Color.fromRGBO(0, 0, 0, 0.0);
     if (appData.shapeSelected != -1) {
       Shape selShape = appData.getSelectedShape();
       shapeInitialColor = selShape.strokeColor;
+      shapeInitialFillColor = selShape.fillColor;
       appData.newShape.strokeWidth = selShape.strokeWidth;
       appData.currentShapeColor = selShape.strokeColor;
+      appData.currentFillColor = selShape.fillColor;
     }
 
     return Container(
@@ -122,11 +124,11 @@ class LayoutSidebarFormatState extends State<LayoutSidebarFormat> {
                     Container(
                         alignment: Alignment.centerLeft,
                         width: 80,
-                        child: CDKButtonCheckBox(value: appData.newShape.closed, onChanged: (value) {
-                          appData.setIsShapeClosed();
+                        child: CDKButtonCheckBox(value: appData.currentShapeClosed, onChanged: (value) {
+                          appData.setIsShapeClosed(value);
                           if (appData.shapeSelected != -1) {
                             Shape selShape = appData.getSelectedShape();
-                            selShape.closed = value;
+                            appData.setCloseRegister(appData, selShape, !value, value);
                           }
                           
                         },)
@@ -153,7 +155,7 @@ class LayoutSidebarFormatState extends State<LayoutSidebarFormat> {
                                     CupertinoAlertDialog(
                                         title: const Text('Color Picker'),
                                         content: CDKPickerColor(
-                                          color: appData.newShape.fillColor,
+                                          color: appData.currentFillColor,
                                           onChanged: (selectedColor) {
                                             appData.setNewShapeFillcolor(selectedColor);
 
@@ -166,7 +168,7 @@ class LayoutSidebarFormatState extends State<LayoutSidebarFormat> {
                               ).then((value) {
                                 if (appData.shapeSelected != -1) {
                                   Shape s = appData.getSelectedShape();
-                                  //appData.setStrokeColorRegister(s, shapeInitialColor, s.strokeColor);
+                                  appData.setFillColorRegister(appData, s, shapeInitialFillColor, s.fillColor);
                                 }
                               });
                             },

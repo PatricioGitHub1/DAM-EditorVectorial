@@ -102,6 +102,12 @@ class LayoutDesignState extends State<LayoutDesign> {
       return Stack(
         children: [
           GestureDetector(
+              onDoubleTap: () {
+                if (appData.toolSelected == "shape_multiline" && appData.newShape.vertices.length >= 2) {
+                  appData.newShape.closed = true;
+                  appData.addNewShapeToShapesList();
+                }
+              },
               onPanEnd: (details) {
                 _keyScrollX.currentState!.startInertiaAnimation();
                 _keyScrollY.currentState!.startInertiaAnimation();
@@ -177,6 +183,39 @@ class LayoutDesignState extends State<LayoutDesign> {
                               constraints,
                               docSize,
                               _scrollCenter));
+                        }
+
+                        if (appData.toolSelected == "shape_multiline") {
+                          if (appData.newShape is ShapeMultiline && appData.newShape.vertices.length < 2) {
+                            appData.newShape = ShapeMultiline();
+                          
+                            Size docSize = Size(
+                                appData.docSize.width, appData.docSize.height);
+                            appData.addNewShape(_getDocPosition(
+                                event.localPosition,
+                                appData.zoom,
+                                constraints,
+                                docSize,
+                                _scrollCenter));
+
+                            appData.addRelativePointToNewShape(_getDocPosition(
+                                event.localPosition,
+                                appData.zoom,
+                                constraints,
+                                docSize,
+                                _scrollCenter));
+
+                          } else {
+                            Size docSize = Size(
+                                appData.docSize.width, appData.docSize.height);
+                            appData.addRelativePointToNewShape(_getDocPosition(
+                                event.localPosition,
+                                appData.zoom,
+                                constraints,
+                                docSize,
+                                _scrollCenter));
+                          }
+
                         }
 
                         if (appData.toolSelected == "shape_rectangle") {
