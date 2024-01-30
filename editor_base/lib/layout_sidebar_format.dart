@@ -43,6 +43,55 @@ class LayoutSidebarFormatState extends State<LayoutSidebarFormat> {
           return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Text("Coordinates:", style: fontBold),
+                const SizedBox(height: 8),
+                Row(mainAxisAlignment: MainAxisAlignment.start, children: [
+                  Container(
+                      alignment: Alignment.centerRight,
+                      width: labelsWidth,
+                      child: Text("Offset X:", style: font)),
+                  const SizedBox(width: 4),
+                  Container(
+                      alignment: Alignment.centerLeft,
+                      width: 80,
+                      child: CDKFieldNumeric(
+                        value: appData.shapeSelected != -1 ? appData.getSelectedShape().position.dx : 0.00,
+                        units: "px",
+                        increment: 1,
+                        decimals: 2,
+                        onValueChanged: (value) {
+                          if (appData.shapeSelected != -1) {
+                            Shape selShape = appData.getSelectedShape();
+                            appData.setShapePosition(selShape.position, Offset(value, selShape.position.dy));
+                          }
+                        },
+                      )),
+                ]),
+                const SizedBox(height: 8),
+                Row(mainAxisAlignment: MainAxisAlignment.start, children: [
+                  Container(
+                      alignment: Alignment.centerRight,
+                      width: labelsWidth,
+                      child: Text("Offset Y:", style: font)),
+                  const SizedBox(width: 4),
+                  Container(
+                      alignment: Alignment.centerLeft,
+                      width: 80,
+                      child: CDKFieldNumeric(
+                        value: appData.shapeSelected != -1 ? appData.getSelectedShape().position.dy : 0.00,
+                        units: "px",
+                        increment: 1,
+                        decimals: 2,
+                        onValueChanged: (value) {
+                          if (appData.shapeSelected != -1) {
+                            Shape selShape = appData.getSelectedShape();
+                            appData.setShapePosition(selShape.position, Offset(selShape.position.dx, value));
+                          }
+                        },
+                      )),
+                ]),
+                const SizedBox(height: 8),
+
                 Text("Stroke and fill:", style: fontBold),
                 const SizedBox(height: 8),
                 Row(mainAxisAlignment: MainAxisAlignment.start, children: [
