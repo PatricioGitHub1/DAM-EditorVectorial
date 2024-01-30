@@ -210,7 +210,8 @@ class AppData with ChangeNotifier {
 
   void copyShapeToClipboard() {
     if (shapeSelected != -1) {
-      Clipboard.setData(ClipboardData(text: getSelectedShape().toMap().toString()));
+      //Clipboard.setData(ClipboardData(text: getSelectedShape().toMap().toString()));
+      Clipboard.setData(ClipboardData(text: jsonEncode(getSelectedShape().toMap())));
     }
   }
 

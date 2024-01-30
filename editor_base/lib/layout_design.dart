@@ -9,7 +9,6 @@ import 'app_data.dart';
 import 'layout_design_painter.dart';
 import 'util_custom_scroll_vertical.dart';
 import 'util_custom_scroll_horizontal.dart';
-import 'package:flutter/gestures.dart';
 
 class LayoutDesign extends StatefulWidget {
   const LayoutDesign({super.key});
