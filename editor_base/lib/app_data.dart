@@ -1,10 +1,13 @@
 import 'dart:convert';
+import 'dart:io';
 
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_cupertino_desktop_kit/cdk.dart';
 import 'app_data_actions.dart';
 import 'util_shape.dart';
+import 'package:xml/xml.dart' as xml;
 
 class AppData with ChangeNotifier {
   // Access appData globaly with:
@@ -23,6 +26,8 @@ class AppData with ChangeNotifier {
   Color currentBackgroundColor = Color.fromRGBO(0, 0, 0, 0.0);
   Color currentFillColor = Color.fromRGBO(0, 0, 0, 0.0);
   bool currentShapeClosed = false;
+
+  File? openedFile;
 
   Map<Shape,List<Offset>> highlightPoints = {};
 
@@ -210,7 +215,6 @@ class AppData with ChangeNotifier {
 
   void copyShapeToClipboard() {
     if (shapeSelected != -1) {
-      //Clipboard.setData(ClipboardData(text: getSelectedShape().toMap().toString()));
       Clipboard.setData(ClipboardData(text: jsonEncode(getSelectedShape().toMap())));
     }
   }
@@ -222,7 +226,8 @@ class AppData with ChangeNotifier {
     if (data != null && data.text != null) {
       try {
         Map<String, dynamic> jsonData = jsonDecode(data.text!);
-        if (jsonData["type"] == "shape_drawing") {
+        List shapeTypes = ["ShapeDrawing", "ShapeLine", "ShapeMultiline", "ShapeRectangle", "ShapeEllipsis"];
+        if (shapeTypes.contains(jsonData["type"])) {
           Shape clipboardShape = Shape.fromMap(jsonData);
           actionManager.register(ActionAddNewShape(this, clipboardShape));
           notifyListeners();
@@ -236,5 +241,87 @@ class AppData with ChangeNotifier {
     }
     
   }
+
+  Future<void> selectJsonFile() async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles();
+
+    if (result != null) {
+      File file = File(result.files.single.path!);
+      loadShapesFromFile(file);
+    } 
+  }
+
+  Future<void> loadShapesFromFile(File file) async {
+    try {
+      String contents = await file.readAsString();
+      Map <String, dynamic> jsonData = jsonDecode(contents);
+      List<dynamic> jsonShapes = jsonData["shapes"];
+
+      for (var singleShape in jsonShapes) {
+        shapesList.add(Shape.fromMap(singleShape));
+      }
+
+      openedFile = file;
+      notifyListeners();
+    } catch (e) {
+      print('Error reading file: $e');
+    }
+    
+  }
+
+  Future<void> saveAsNewFile(String type) async {
+    String? outputFile = await FilePicker.platform.saveFile(
+      dialogTitle: 'Please, choose where you would like to save your file:',
+      fileName: type == 'json' ? 'MyDraw.json' : 'mySVG.xml'
+    );
+
+    if (outputFile != null) {
+      // User canceled the picker
+      if (type == "json") {
+        createSavedJson(outputFile);
+      } else if (type == "svg") {
+        createSavedSVG(outputFile);
+      }
+      
+      notifyListeners();
+    }
+  }
+
+  void createSavedJson(String filePath) {
+    List<dynamic> shapesJsonList = [];
+    Map<String, dynamic> finalJson = {};
+    for (var shape in shapesList) {
+      shapesJsonList.add(shape.toMap());
+    }
+
+    finalJson["shapes"] = shapesJsonList;
+
+    String jsonString = jsonEncode(finalJson);
+    openedFile = File(filePath);
+    openedFile!.writeAsStringSync(jsonString);
+
+  }
+
+  void createSavedSVG(String filePath) {
+    var svgElement = xml.XmlElement(xml.XmlName('svg'), [
+      xml.XmlAttribute(xml.XmlName('xmlns'), 'http://www.w3.org/2000/svg'),
+      xml.XmlAttribute(xml.XmlName('width'), docSize.width.toString()),
+      xml.XmlAttribute(xml.XmlName('height'), docSize.height.toString())
+    ]);
+
+    List<xml.XmlNode> svgChildrenList = [];
+
+    for (var shape in shapesList) {
+      svgChildrenList.add(shape.mapShapeSVG());
+    }
+
+    svgElement.children.addAll(svgChildrenList);
+    var docXML = xml.XmlDocument([svgElement]);
+
+    File(filePath).writeAsString(docXML.toXmlString(pretty: true))
+      .then((_) => print('File saved successfully'))
+      .catchError((error) => print('Failed to save file: $error'));
+  }
+
 }
 

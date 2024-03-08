@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter_cupertino_desktop_kit/cdk.dart';
 import 'package:provider/provider.dart';
 import 'app_data.dart';
+import 'package:path/path.dart' as path;
 
 class LayoutSidebarDocument extends StatefulWidget {
   const LayoutSidebarDocument({super.key});
@@ -109,6 +110,59 @@ class LayoutSidebarDocumentState extends State<LayoutSidebarDocument> {
                   ],
                 ),
                 const SizedBox(height: 16),
+                Text("File actions:", style: fontBold),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    Container(
+                        alignment: Alignment.centerRight,
+                        width: labelsWidth,
+                        child: CDKButton(
+                          child: const Text("Load File"),
+                          onPressed: () {
+                            appData.selectJsonFile();
+                          },)
+                    ),
+                    const SizedBox(width: 4), 
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    Container(
+                        alignment: Alignment.centerRight,
+                        width: labelsWidth,
+                        child: CDKButton(child: appData.openedFile == null ? const Text("Save as") : const Text("Save"),
+                        onPressed: () {
+                            appData.saveAsNewFile("json");
+                        },)
+                    ),
+                    const SizedBox(width: 4),
+                    Container(
+                        alignment: Alignment.centerLeft,
+                        width: 80,
+                        child: appData.openedFile == null ? const Text("") :  Text(path.basename(appData.openedFile!.path), style: const TextStyle(fontSize: 10),),
+                    ), 
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    Container(
+                        alignment: Alignment.centerRight,
+                        width: labelsWidth,
+                        child: CDKButton(child: const Text("Export as SVG"),
+                        onPressed: () {
+                          appData.saveAsNewFile("svg");
+                        },)
+                    ),
+                    const SizedBox(width: 4), 
+                  ],
+                ),
+                const SizedBox(height: 8),
               ]);
         },
       ),
